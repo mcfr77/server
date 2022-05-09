@@ -112,7 +112,6 @@ class FileMetadataMapper extends QBMapper {
 	 * @return Entity the saved entity with the set id
 	 * @throws Exception
 	 * @throws \InvalidArgumentException if entity has no id
-	 * @since 14.0.0
 	 */
 	public function update(Entity $entity): Entity {
 		// if entity wasn't changed it makes no sense to run a db query
