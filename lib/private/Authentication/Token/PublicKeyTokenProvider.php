@@ -167,7 +167,7 @@ class PublicKeyTokenProvider implements IProvider {
 	public function renewSessionToken(string $oldSessionId, string $sessionId): IToken {
 		$this->cache->clear();
 
-		$this->atomic(function() use ($oldSessionId, $sessionId) {
+		return $this->atomic(function() use ($oldSessionId, $sessionId) {
 			$token = $this->getToken($oldSessionId);
 
 			if (!($token instanceof PublicKeyToken)) {
@@ -179,7 +179,6 @@ class PublicKeyTokenProvider implements IProvider {
 				$privateKey = $this->decrypt($token->getPrivateKey(), $oldSessionId);
 				$password = $this->decryptPassword($token->getPassword(), $privateKey);
 			}
-
 			$newToken = $this->generateToken(
 				$sessionId,
 				$token->getUID(),
