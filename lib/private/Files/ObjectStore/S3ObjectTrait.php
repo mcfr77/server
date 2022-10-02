@@ -29,9 +29,10 @@ namespace OC\Files\ObjectStore;
 use Aws\S3\Exception\S3MultipartUploadException;
 use Aws\S3\MultipartUploader;
 use Aws\S3\S3Client;
+use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\Utils;
 use OC\Files\Stream\SeekableHttpStream;
-use GuzzleHttp\Psr7;
+use OCP\Files\ExpectedFileSizeException;
 use Psr\Http\Message\StreamInterface;
 
 trait S3ObjectTrait {
@@ -47,12 +48,13 @@ trait S3ObjectTrait {
 
 	/**
 	 * @param string $urn the unified resource name used to identify the object
+	 *
 	 * @return resource stream with the read data
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @since 7.0.0
 	 */
-	public function readObject($urn) {
-		return SeekableHttpStream::open(function ($range) use ($urn) {
+	public function readObject($urn, int $expectedFileSize = -1) {
+		return SeekableHttpStream::open(function ($range) use ($urn, $expectedFileSize) {
 			$command = $this->getConnection()->getCommand('GetObject', [
 				'Bucket' => $this->bucket,
 				'Key' => $urn,
@@ -84,9 +86,49 @@ trait S3ObjectTrait {
 			}
 
 			$context = stream_context_create($opts);
-			return fopen($request->getUri(), 'r', false, $context);
+			$res = fopen($request->getUri(), 'r', false, $context);
+
+			if (substr($range, 0, 2) !== '0-') {
+				return $res;
+			}
+
+			$actualContentLength = $this->extractDataContentLength($res);
+			if ($actualContentLength > -1
+				&& $expectedFileSize > -1
+				&& $actualContentLength !== $expectedFileSize) {
+				throw new ExpectedFileSizeException(
+					'cached file size conflict',
+					$actualContentLength
+				);
+			}
+
+			return $res;
 		});
 	}
+
+
+	/**
+	 * will return -1 if $res is a bool (not a resource)
+	 *
+	 * @param resource $res
+	 *
+	 * @return int
+	 */
+	private function extractDataContentLength($res): int {
+		if (is_bool($res)) {
+			return -1;
+		}
+
+		$data = stream_get_meta_data($res)['wrapper_data'];
+		foreach ($data as $entry) {
+			if (substr($entry, 0, 16) === 'Content-Length: ') {
+				return (int)substr($entry, 16);
+			}
+		}
+
+		return -1;
+	}
+
 
 	/**
 	 * Single object put helper

@@ -36,6 +36,7 @@ use OC\Files\Cache\Cache;
 use OC\Files\Cache\CacheEntry;
 use OC\Files\Storage\PolyFill\CopyDirectory;
 use OCP\Files\Cache\ICacheEntry;
+use OCP\Files\ExpectedFileSizeException;
 use OCP\Files\FileInfo;
 use OCP\Files\NotFoundException;
 use OCP\Files\ObjectStore\IObjectStore;
@@ -303,12 +304,16 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common {
 			case 'rb':
 				$stat = $this->stat($path);
 				if (is_array($stat)) {
+					$filesize = $stat['size'] ?? 0;
 					// Reading 0 sized files is a waste of time
-					if (isset($stat['size']) && $stat['size'] === 0) {
+					if ($filesize === 0) {
 						return fopen('php://memory', $mode);
 					}
 
 					try {
+						return $this->objectStore->readObject($this->getURN($stat['fileid']), $filesize);
+					} catch (ExpectedFileSizeException $e) {
+						$this->getCache()->update((int)$stat['fileid'], ['size' => $e->getActualFileSize()]);
 						return $this->objectStore->readObject($this->getURN($stat['fileid']));
 					} catch (NotFoundException $e) {
 						$this->logger->logException($e, [

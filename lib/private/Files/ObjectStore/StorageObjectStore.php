@@ -55,7 +55,7 @@ class StorageObjectStore implements IObjectStore {
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @since 7.0.0
 	 */
-	public function readObject($urn) {
+	public function readObject($urn, int $expectedFileSize = -1) {
 		$handle = $this->storage->fopen($urn, 'r');
 		if (is_resource($handle)) {
 			return $handle;

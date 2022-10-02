@@ -41,12 +41,13 @@ interface IObjectStore {
 
 	/**
 	 * @param string $urn the unified resource name used to identify the object
+	 * @param int $expectedFileSize the expectedFileSize to compare the current real filesize
 	 * @return resource stream with the read data
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @throws NotFoundException if file does not exist
 	 * @since 7.0.0
 	 */
-	public function readObject($urn);
+	public function readObject($urn, int $expectedFileSize = -1);
 
 	/**
 	 * @param string $urn the unified resource name used to identify the object

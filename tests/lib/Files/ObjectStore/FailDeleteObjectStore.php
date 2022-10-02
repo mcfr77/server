@@ -36,8 +36,8 @@ class FailDeleteObjectStore implements IObjectStore {
 		return $this->objectStore->getStorageId();
 	}
 
-	public function readObject($urn) {
-		return $this->objectStore->readObject($urn);
+	public function readObject($urn, int $expectedFileSize = -1) {
+		return $this->objectStore->readObject($urn, $expectedFileSize);
 	}
 
 	public function writeObject($urn, $stream, string $mimetype = null) {

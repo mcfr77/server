@@ -95,7 +95,7 @@ class Azure implements IObjectStore {
 	 * @return resource stream with the read data
 	 * @throws \Exception when something goes wrong, message will be logged
 	 */
-	public function readObject($urn) {
+	public function readObject($urn, int $expectedFileSize = -1) {
 		$blob = $this->getBlobClient()->getBlob($this->containerName, $urn);
 		return $blob->getContentStream();
 	}

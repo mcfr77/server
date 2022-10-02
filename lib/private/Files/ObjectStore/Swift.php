@@ -101,7 +101,7 @@ class Swift implements IObjectStore {
 	 * @throws \Exception from openstack or GuzzleHttp libs when something goes wrong
 	 * @throws NotFoundException if file does not exist
 	 */
-	public function readObject($urn) {
+	public function readObject($urn, int $expectedFileSize = -1) {
 		try {
 			$publicUri = $this->getContainer()->getObject($urn)->getPublicUri();
 			$tokenId = $this->swiftFactory->getCachedTokenId();
