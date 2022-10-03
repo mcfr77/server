@@ -77,9 +77,9 @@ class ReferenceManager implements IReferenceManager {
 
 	public function getReferenceByCacheKey(string $cacheKey): ?IReference {
 		$cached = $this->cache->get($cacheKey);
-		if ($cached) {
-			return Reference::fromCache($cached);
-		}
+		//if ($cached) {
+		//	return Reference::fromCache($cached);
+		//}
 
 		return null;
 	}
@@ -93,9 +93,9 @@ class ReferenceManager implements IReferenceManager {
 
 		$cacheKey = $this->getFullCacheKey($matchedProvider, $referenceId);
 		$cached = $this->cache->get($cacheKey);
-		if ($cached) {
-			return Reference::fromCache($cached);
-		}
+		//if ($cached) {
+		//	return Reference::fromCache($cached);
+		//}
 
 		$reference = $matchedProvider->resolveReference($referenceId);
 		if ($reference) {
