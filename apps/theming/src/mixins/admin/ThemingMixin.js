@@ -22,7 +22,6 @@
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 import '@nextcloud/dialogs/styles/toast.scss'
 
 export default {
@@ -32,35 +31,51 @@ export default {
 
 	data() {
 		return {
-			name: null,
-			value: null,
 			showSuccess: false,
+			errorMessage: '',
 		}
+	},
+
+	computed: {
+		id() {
+			return `admin-theming-${this.name}`
+		},
 	},
 
 	methods: {
 		async save() {
+			this.reset()
 			const url = generateUrl('/apps/theming/ajax/updateStylesheet')
+
 			try {
 				await axios.post(url, { setting: this.name, value: this.value })
+				this.$emit('update:value', this.value)
 				this.showSuccess = true
 				setTimeout(() => { this.showSuccess = false }, 2000)
 				this.$emit('update:theming')
 			} catch (e) {
-				showError(e.message)
+				this.errorMessage = e.response.data.data.message
 			}
 		},
 
 		async undo() {
+			this.reset()
 			const url = generateUrl('/apps/theming/ajax/undoChanges')
+
 			try {
-				await axios.post(url, { setting: this.name })
+				const { data } = await axios.post(url, { setting: this.name })
+				this.$emit('update:value', data.data.value)
 				this.showSuccess = true
 				setTimeout(() => { this.showSuccess = false }, 2000)
 				this.$emit('update:theming')
 			} catch (e) {
-				showError(e.message)
+				this.errorMessage = e.response.data.data.message
 			}
+		},
+
+		reset() {
+			this.showSuccess = false
+			this.errorMessage = ''
 		},
 	}
 }

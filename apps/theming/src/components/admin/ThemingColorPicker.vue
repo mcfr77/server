@@ -22,8 +22,8 @@
 
 <template>
 	<div class="field">
+		<label :for="id">{{ t('theming', 'Color') }}</label>
 		<div class="field__row">
-			<label :for="id">{{ t('theming', 'Color') }}</label>
 			<NcColorPicker :value.sync="value"
 				:advanced-fields="true"
 				@update:value="save">
@@ -34,9 +34,10 @@
 					{{ value }}
 				</NcButton>
 			</NcColorPicker>
-			<NcButton v-if="value !== '#0082c9'"
+			<NcButton v-if="value !== defaultValue"
 				type="tertiary"
-				:aria-label="t('theming', 'Reset to default')">
+				:aria-label="t('theming', 'Reset to default')"
+				@click="undo">
 				<template #icon>
 					<Undo :size="20" />
 				</template>
@@ -47,18 +48,19 @@
 			type="success">
 			<p>{{ t('theming', 'Saved') }}</p>
 		</NcNoteCard>
+		<NcNoteCard v-if="errorMessage"
+			type="error"
+			:show-alert="true">
+			<p>{{ errorMessage }}</p>
+		</NcNoteCard>
 	</div>
 </template>
 
 <script>
-import { loadState } from '@nextcloud/initial-state'
-
 import { NcButton, NcColorPicker, NcNoteCard } from '@nextcloud/vue'
 import Undo from 'vue-material-design-icons/UndoVariant.vue'
 
 import ThemingMixin from '../../mixins/admin/ThemingMixin.js'
-
-const { color } = loadState('theming', 'adminThemingParameters')
 
 export default {
 	name: 'ThemingColorPicker',
@@ -74,11 +76,19 @@ export default {
 		ThemingMixin,
 	],
 
-	data() {
-		return {
-			name: 'color',
-			value: color,
-		}
+	props: {
+		name: {
+			type: String,
+			required: true,
+		},
+		value: {
+			type: String,
+			required: true,
+		},
+		defaultValue: {
+			type: String,
+			required: true,
+		},
 	},
 }
 </script>
@@ -92,11 +102,6 @@ export default {
 	&__row {
 		display: flex;
 		gap: 0 6px;
-
-		label {
-			width: 180px;
-			white-space: nowrap;
-		}
 	}
 
 	&__button {

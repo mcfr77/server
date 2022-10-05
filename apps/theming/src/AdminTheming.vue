@@ -34,21 +34,26 @@
 				<ThemingTextField v-for="setting in textFieldSettings"
 					:key="setting.name"
 					:name="setting.name"
-					:value="setting.value"
+					:value.sync="setting.value"
 					:default-value="setting.defaultValue"
 					:type="setting.type"
 					:display-name="setting.displayName"
 					:placeholder="setting.placeholder"
 					:maxlength="setting.maxlength"
 					@update:theming="updateTheming" />
-				<ThemingColorPicker @update:theming="updateTheming" />
+				<ThemingColorPicker
+					:name="colorPickerSetting.name"
+					:value.sync="colorPickerSetting.value"
+					:default-value="colorPickerSetting.defaultValue"
+					@update:theming="updateTheming" />
 				<ThemingFileInputField v-for="setting in fileInputSettings"
 					:key="setting.name"
 					:name="setting.name"
-					:default-value="setting.defaultValue"
+					:mime-name="setting.mimeName"
+					:mime-value.sync="setting.mimeValue"
+					:default-mime-value="setting.defaultMimeValue"
 					:display-name="setting.displayName"
 					:aria-label="setting.ariaLabel"
-					:has-preview="setting.hasPreview"
 					@update:theming="updateTheming" />
 				<div class="admin-theming__preview">
 					<div class ="admin-theming__preview-logo"/>
@@ -60,7 +65,7 @@
 				<ThemingTextField v-for="setting in advancedTextFieldSettings"
 					:key="setting.name"
 					:name="setting.name"
-					:value="setting.value"
+					:value.sync="setting.value"
 					:default-value="setting.defaultValue"
 					:type="setting.type"
 					:display-name="setting.displayName"
@@ -70,10 +75,11 @@
 				<ThemingFileInputField v-for="setting in advancedFileInputSettings"
 					:key="setting.name"
 					:name="setting.name"
-					:default-value="setting.defaultValue"
+					:mime-name="setting.mimeName"
+					:mime-value.sync="setting.mimeValue"
+					:default-mime-value="setting.defaultMimeValue"
 					:display-name="setting.displayName"
 					:aria-label="setting.ariaLabel"
-					:has-preview="setting.hasPreview"
 					@update:theming="updateTheming" />
 				<a v-if="!canThemeIcons"
 					:href="docUrlIcons"
@@ -95,11 +101,16 @@ import ThemingFileInputField from './components/admin/ThemingFileInputField.vue'
 import ThemingTextField from './components/admin/ThemingTextField.vue'
 
 const {
+	backgroundMime,
 	canThemeIcons,
+	color,
 	docUrl,
 	docUrlIcons,
+	faviconMime,
 	isThemable,
 	legalNoticeUrl,
+	logoheaderMime,
+	logoMime,
 	name,
 	notThemableErrorMessage,
 	privacyPolicyUrl,
@@ -149,20 +160,23 @@ export default {
 					maxlength: 500,
 				},
 			],
+			colorPickerSetting: { name: 'color', value: color, defaultValue: '#0082c9' },
 			fileInputSettings: [
 				{
 					name: 'logo',
-					defaultValue: '',
+					mimeName: 'logoMime',
+					mimeValue: logoMime,
+					defaultMimeValue: '',
 					displayName: t('theming', 'Logo'),
 					ariaLabel: t('theming', 'Upload new logo'),
-					hasPreview: false,
 				},
 				{
 					name: 'background',
-					defaultValue: '',
+					mimeName: 'backgroundMime',
+					mimeValue: backgroundMime,
+					defaultMimeValue: '',
 					displayName: t('theming', 'Login image'),
 					ariaLabel: t('theming', 'Upload new login background'),
-					hasPreview: false,
 				},
 			],
 			advancedTextFieldSettings: [
@@ -188,17 +202,19 @@ export default {
 			advancedFileInputSettings: [
 				{
 					name: 'logoheader',
-					defaultValue: '',
+					mimeName: 'logoheaderMime',
+					mimeValue: logoheaderMime,
+					defaultMimeValue: '',
 					displayName: t('theming', 'Header logo'),
 					ariaLabel: t('theming', 'Upload new header logo'),
-					hasPreview: true,
 				},
 				{
 					name: 'favicon',
-					defaultValue: '',
+					mimeName: 'faviconMime',
+					mimeValue: faviconMime,
+					defaultMimeValue: '',
 					displayName: t('theming', 'Favicon'),
 					ariaLabel: t('theming', 'Upload new favicon'),
-					hasPreview: true,
 				},
 			],
 
@@ -233,15 +249,11 @@ export default {
 		background-size: cover;
 		background-position: center center;
 		text-align: center;
-		margin-left: 178px;
-		margin-top: 10px;
-		margin-bottom: 20px;
-		cursor: pointer;
+		margin: 10px 0;
 		background-color: var(--color-primary);
 		background-image: var(--image-background, var(--image-background-plain, url('../../../core/img/app-background.jpg'), linear-gradient(40deg, #0082c9 0%, #30b6ff 100%)));
 
 		&-logo {
-			cursor: pointer;
 			width: 20%;
 			height: 20%;
 			margin-top: 20px;

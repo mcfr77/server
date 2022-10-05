@@ -27,6 +27,7 @@
  */
 namespace OCA\Theming\Settings;
 
+use OCA\Theming\AppInfo\Application;
 use OCA\Theming\ImageManager;
 use OCA\Theming\ThemingDefaults;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -74,11 +75,6 @@ class Admin implements IDelegatedSettings {
 			$errorMessage = $this->l->t('You are already using a custom theme. Theming app settings might be overwritten by that.');
 		}
 
-		$parameters = [
-			// Contains image mimes
-			'images' => $this->imageManager->getCustomImages(),
-		];
-
 		$this->initialState->provideInitialState('adminThemingParameters', [
 			'isThemable' => $themable,
 			'notThemableErrorMessage' => $errorMessage,
@@ -86,6 +82,10 @@ class Admin implements IDelegatedSettings {
 			'url' => $this->themingDefaults->getBaseUrl(),
 			'slogan' => $this->themingDefaults->getSlogan(),
 			'color' => $this->themingDefaults->getColorPrimary(),
+			'logoMime' => $this->config->getAppValue(Application::APP_ID, 'logoMime', ''),
+			'backgroundMime' => $this->config->getAppValue(Application::APP_ID, 'backgroundMime', ''),
+			'logoheaderMime' => $this->config->getAppValue(Application::APP_ID, 'logoheaderMime', ''),
+			'faviconMime' => $this->config->getAppValue(Application::APP_ID, 'faviconMime', ''),
 			'legalNoticeUrl' => $this->themingDefaults->getImprintUrl(),
 			'privacyPolicyUrl' => $this->themingDefaults->getPrivacyUrl(),
 			'docUrl' => $this->urlGenerator->linkToDocs('admin-theming'),

@@ -22,10 +22,10 @@
 
 <template>
 	<div class="field">
+		<label :for="id">{{ displayName }}</label>
 		<div class="field__row">
-			<label :for="id">{{ displayName }}</label>
 			<NcButton :id="id"
-				type="tertiary"
+				type="secondary"
 				:aria-label="ariaLabel"
 				@click="activateLocalFilePicker">
 				<template #icon>
@@ -34,15 +34,10 @@
 				{{ t('theming', 'Upload') }}
 			</NcButton>
 
-			<div v-if="hasPreview" class="field__preview"
-				:class="{
-					'field__preview--logoheader': hasPreviewLogoHeader,
-					'field__preview--favicon': hasPreviewFavicon,
-				}" />
-
-			<NcButton v-if="loginBackground !== defaultLoginBackground"
+			<NcButton v-if="mimeValue !== defaultMimeValue"
 				type="tertiary"
-				:aria-label="t('theming', 'Reset to default')">
+				:aria-label="t('theming', 'Reset to default')"
+				@click="undo">
 				<template #icon>
 					<Undo :size="20" />
 				</template>
@@ -57,9 +52,21 @@
 			</NcButton>
 		</div>
 
+		<div v-if="(name === 'logoheader' || name === 'favicon') && mimeValue !== defaultMimeValue"
+			class="field__preview"
+			:class="{
+				'field__preview--logoheader': name === 'logoheader',
+				'field__preview--favicon': name === 'favicon',
+			}" />
+
 		<NcNoteCard v-if="showSuccess"
 			type="success">
 			<p>{{ t('theming', 'Saved') }}</p>
+		</NcNoteCard>
+		<NcNoteCard v-if="errorMessage"
+			type="error"
+			:show-alert="true">
+			<p>{{ errorMessage }}</p>
 		</NcNoteCard>
 
 		<input ref="input"
@@ -71,7 +78,6 @@
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 
 import { NcButton, NcNoteCard } from '@nextcloud/vue'
 
@@ -101,7 +107,15 @@ export default {
 			type: String,
 			required: true,
 		},
-		defaultValue: {
+		mimeName: {
+			type: String,
+			required: true,
+		},
+		mimeValue: {
+			type: String,
+			required: true,
+		},
+		defaultMimeValue: {
 			type: String,
 			required: true,
 		},
@@ -111,10 +125,6 @@ export default {
 		},
 		ariaLabel: {
 			type: String,
-			required: true,
-		},
-		hasPreview: {
-			type: Boolean,
 			required: true,
 		},
 	},
@@ -130,28 +140,47 @@ export default {
 			const file = e.target.files[0]
 
 			const formData = new FormData()
+			formData.append('key', this.name)
 			formData.append('image', file)
 
 			const url = generateUrl('/apps/theming/ajax/uploadImage')
 			try {
-				await axios.post(url, formData)
+				const { data } = await axios.post(url, formData)
+				// FIXME use actual mimetype
+				this.$emit('update:mime-value', data.data.name)
 				this.showSuccess = true
 				setTimeout(() => { this.showSuccess = false }, 2000)
 				this.$emit('update:theming')
 			} catch (e) {
-				showError(e.message)
+				this.errorMessage = e.response.data.data.message
 			}
 		},
 
 		async removeBackground() {
 			const url = generateUrl('/apps/theming/ajax/updateStylesheet')
 			try {
-				await axios.post(url, { setting: 'backgroundMime', value: 'backgroundColor' })
+				await axios.post(url, { setting: this.mimeName, value: 'backgroundColor' })
+				this.$emit('update:mime-value', 'backgroundColor')
 				this.showSuccess = true
 				setTimeout(() => { this.showSuccess = false }, 2000)
 				this.$emit('update:theming')
-			} catch (error) {
-				showError(e.message)
+			} catch (e) {
+				this.errorMessage = e.response.data.data.message
+			}
+		},
+
+		async undo() {
+			this.reset()
+			const url = generateUrl('/apps/theming/ajax/undoChanges')
+
+			try {
+				const { data } = await axios.post(url, { setting: this.mimeName })
+				this.$emit('update:mime-value', data.data.value)
+				this.showSuccess = true
+				setTimeout(() => { this.showSuccess = false }, 2000)
+				this.$emit('update:theming')
+			} catch (e) {
+				this.errorMessage = e.response.data.data.message
 			}
 		},
 	},
@@ -175,6 +204,13 @@ export default {
 	}
 
 	&__preview {
+		width: 80px;
+		height: 80px;
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+		margin: 10px 0;
+
 		&--logoheader {
 			background-image: var(--image-logoheader);
 		}

@@ -22,13 +22,15 @@
 
 <template>
 	<div class="field">
-		<label :for="id">{{ displayName }}</label>
-		<NcTextField :id="id"
+		<NcTextField :label="displayName"
+			:label-visible="true"
 			:value.sync="value"
-			:label-outside="true"
 			:placeholder="placeholder"
+			:type="type"
 			:maxlength="maxlength"
 			:success="showSuccess"
+			:error="Boolean(errorMessage)"
+			:helper-text="errorMessage"
 			:show-trailing-button="value !== defaultValue"
 			@trailing-button-click="undo"
 			@keydown.enter="save">
@@ -93,12 +95,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.field {
-	display: flex;
 
-	label {
-		width: 180px;
-		white-space: nowrap;
-	}
-}
 </style>
